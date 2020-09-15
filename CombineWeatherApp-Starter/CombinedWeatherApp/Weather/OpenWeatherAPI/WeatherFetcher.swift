@@ -94,11 +94,16 @@ protocol WeatherFetchable {
 }
 
 extension WeatherFetcher: WeatherFetchable {
-  func weeklyWeatherForecast(forCity city: String) -> AnyPublisher<WeeklyForecastResponse, WeatherError> {
+  func weeklyWeatherForecast(
+    forCity city: String
+  ) -> AnyPublisher<WeeklyForecastResponse, WeatherError> {
+    return forecast(with: makeWeeklyForecastComponents(withCity: city))
   }
-  
-  func currentWeatherForecast(forCity city: String) -> AnyPublisher<CurrentWeatherForecastResponse, WeatherError> {
-    <#code#>
+
+  func currentWeatherForecast(
+    forCity city: String
+  ) -> AnyPublisher<CurrentWeatherForecastResponse, WeatherError> {
+    return forecast(with: makeCurrentDayForecastComponents(withCity: city))
   }
   
   private func forecast<T>(
