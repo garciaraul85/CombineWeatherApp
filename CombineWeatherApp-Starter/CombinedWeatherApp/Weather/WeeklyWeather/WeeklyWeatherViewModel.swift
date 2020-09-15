@@ -72,3 +72,12 @@ class WeeklyWeatherViewModel: ObservableObject, Identifiable {
   }
   
 }
+
+extension WeeklyWeatherViewModel {
+  var currentWeatherView: some View {
+    return WeeklyWeatherBuilder.makeCurrentWeatherView(
+      withCity: city,
+      weatherFetcher: weatherFetcher
+    )
+  }
+}

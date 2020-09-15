@@ -1,35 +1,39 @@
-/// Copyright (c) 2019 Razeware LLC
-/// 
-/// Permission is hereby granted, free of charge, to any person obtaining a copy
-/// of this software and associated documentation files (the "Software"), to deal
-/// in the Software without restriction, including without limitation the rights
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-/// copies of the Software, and to permit persons to whom the Software is
-/// furnished to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in
-/// all copies or substantial portions of the Software.
-/// 
-/// Notwithstanding the foregoing, you may not use, copy, modify, merge, publish,
-/// distribute, sublicense, create a derivative work, and/or sell copies of the
-/// Software in any work that is designed, intended, or marketed for pedagogical or
-/// instructional purposes related to programming, coding, application development,
-/// or information technology.  Permission for such use, copying, modification,
-/// merger, publication, distribution, sublicensing, creation of derivative works,
-/// or sale is expressly withheld.
-/// 
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-/// THE SOFTWARE.
-
 import SwiftUI
 
+// You inject a ViewModel in the View and access its public API.
 struct CurrentWeatherView: View {
+  @ObservedObject var viewModel: CurrentWeatherViewModel
+
+  init(viewModel: CurrentWeatherViewModel) {
+    self.viewModel = viewModel
+  }
+  
+  // You’ll notice the use of the onAppear(perform:) method. This takes a function of type () -> Void and executes it when the view appears. In this case, you call refresh() on the View Model so the dataSource can be refreshed.
   var body: some View {
-    Text("Seems like a lovely day 😎")
+    List(content: content)
+      .onAppear(perform: viewModel.refresh)
+      .navigationBarTitle(viewModel.city)
+      .listStyle(GroupedListStyle())
+  }
+  
+}
+
+// This adds the remaining UI bits.
+private extension CurrentWeatherView {
+  func content() -> some View {
+    if let viewModel = viewModel.dataSource {
+      return AnyView(details(for: viewModel))
+    } else {
+      return AnyView(loading)
+    }
+  }
+
+  func details(for viewModel: CurrentWeatherRowViewModel) -> some View {
+    CurrentWeatherRow(viewModel: viewModel)
+  }
+
+  var loading: some View {
+    Text("Loading \(viewModel.city)'s weather...")
+      .foregroundColor(.gray)
   }
 }
