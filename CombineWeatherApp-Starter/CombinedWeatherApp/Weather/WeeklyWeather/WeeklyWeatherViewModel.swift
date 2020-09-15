@@ -14,8 +14,24 @@ class WeeklyWeatherViewModel: ObservableObject, Identifiable {
   // 4: Think of disposables as a collection of references to requests. Without keeping these references, the network requests you’ll make won’t be kept alive, preventing you from getting responses from the server.
   private var disposables = Set<AnyCancellable>()
   
-  init(weatherFetcher: WeatherFetchable) {
+  // This code is crucial because it bridges both worlds: SwiftUI and Combine.
+  // 1: Add a scheduler parameter, so you can specify which queue the HTTP request will use.
+  init(
+    weatherFetcher: WeatherFetchable,
+    scheduler: DispatchQueue = DispatchQueue(label: "WeatherViewModel")
+  ) {
     self.weatherFetcher = weatherFetcher
+    
+    // 2: The city property uses the @Published property delegate so it acts like any other Publisher. This means it can be observed and can also make use of any other method that is available to Publisher.
+    $city
+      // 3: As soon as you create the observation, $city emits its first value. Since the first value is an empty string, you need to skip it to avoid an unintended network call.
+      .dropFirst(1)
+      // 4: Use debounce(for:scheduler:) to provide a better user experience. Without it the fetchWeather would make a new HTTP request for every letter typed. debounce works by waiting half a second (0.5) until the user stops typing and finally sending a value.
+      .debounce(for: .seconds(0.5), scheduler: scheduler)
+      // 5: You observe these events via sink(receiveValue:) and handle them with fetchWeather(forCity:) that you previously implemented.
+      .sink(receiveValue: fetchWeather(forCity:))
+      // 6: Finally, you store the cancelable as you did before.
+      .store(in: &disposables)
   }
   
   func fetchWeather(forCity city: String) {
